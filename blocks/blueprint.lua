@@ -1,8 +1,9 @@
 -- Represents a singular piece of the whole blueprint
 minetest.register_node(minetest.get_current_modname()..":blueprint",{
 	description = "Blueprint block",
-	tiles = {"^[colorize:#802BB1"},
+	tiles = {"Blueprint.png"},
 	walkable = false,
+	drawtype = "glasslike",
 	buildable_to = true,
 	drop = {},
 	on_rightclick = function(pos, node, player, itemstack, pointed_thing)
@@ -13,7 +14,7 @@ minetest.register_node(minetest.get_current_modname()..":blueprint",{
 -- Used to place down blueprints
 minetest.register_node(minetest.get_current_modname()..":blueprint_selector",{
 	description = "Blueprint selector",
-	tiles = {"^[colorize:#3300FF"},
+	tiles = {"Builder.png"},
 	walkable = true,
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
 		local path = minetest.get_modpath("lazybuilder").."/schematics/House_Simple_1.mts"
