@@ -23,8 +23,8 @@ local function get_selector_formspec(pos)
 	local blocks = minetest.deserialize(meta:get_string("blocks"))
 	local i = 0
 	for k,v in pairs(blocks) do
-		table.insert(formspec, "list[context;".. tostring(k) ..";".. tostring(i + 0.5) ..",0.96;2,2;]")
-		minetest.chat_send_all(tostring(k))
+		table.insert(formspec, "list[context;".. tostring(k) ..";1,".. tostring(i + 0.5) ..";2,2;]")
+		table.insert(formspec, "label[2.2, ".. tostring(i + 1) .."; Block: " .. tostring(k) .." Amount: " .. tostring(v) .. "]")
 		i = i + 1
 	end
 	return table.concat(formspec, "")
