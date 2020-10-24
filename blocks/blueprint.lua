@@ -62,7 +62,7 @@ minetest.register_node(minetest.get_current_modname()..":blueprint_selector",{
 	description = "Blueprint selector",
 	tiles = {"Builder.png"},
 	walkable = true,
-
+	groups = {choppy = 3, snappy = 1},
 	on_construct = function(pos)
 		local path = minetest.get_modpath("lazybuilder").."/schematics/House_Simple.mts"
 		local schematic  = minetest.read_schematic(path, {})
@@ -86,4 +86,13 @@ minetest.register_node(minetest.get_current_modname()..":blueprint_selector",{
 	on_receive_fields = function(pos, formname, fields, player)
 		
 	end
+})
+
+minetest.register_craft({
+	output = "lazybuilder:blueprint_selector",
+	recipe = {
+		{"group:wood",   "default:chest",      "group:wood"},
+		{"default:glass","default:steelblock", "default:glass"},
+		{"group:wood",   "group:wood",         "group:wood"}
+	}
 })
