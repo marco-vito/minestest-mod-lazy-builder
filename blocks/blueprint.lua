@@ -11,6 +11,36 @@ minetest.register_node(minetest.get_current_modname()..":blueprint",{
 	end
 })
 
+-- reads the chematics folder and creates a textlist with all the available schematics
+local function get_schematics_textlist()
+
+	local schematics_textlist = {}
+	local schematics_path = minetest.get_modpath("lazybuilder") .. "/schematics"
+	local files_list = minetest.get_dir_list(schematics_path, false)
+
+	for i, filename in ipairs(files_list) do
+		local new_string = filename:match(".mts")
+        if new_string then
+			table.insert(schematics_textlist, filename)
+        end
+	end
+	return schematics_textlist
+end
+
+
+local function list_to_string(list)
+	local new_string = ""
+	
+	for k,v in pairs(list) do
+		if k == 1 then
+			new_string = new_string .. v
+		else
+			new_string = new_string .. ", " .. v 
+		end
+	end
+	return new_string
+end
+
 -- builds the UI dynamically depending on the amount of different blocks in the schematic
 local function get_selector_formspec(pos)
 	local formspec = {
@@ -27,6 +57,7 @@ local function get_selector_formspec(pos)
 		table.insert(formspec, "label[2.2, ".. tostring(i + 1) .."; Block: " .. tostring(k) .." Amount: " .. tostring(v) .. "]")
 		i = i + 1
 	end
+	table.insert(formspec, "textlist[3,11;6,0.75;schematics_list;" .. list_to_string(get_schematics_textlist()) .. "]")
 	return table.concat(formspec, "")
 end
 
@@ -80,6 +111,8 @@ minetest.register_node(minetest.get_current_modname()..":blueprint_selector",{
 		for k,v in pairs(blocks) do -- Create an inventory for each different item in blocks
 			inv:set_size(tostring(k), 1)
 		end
+		
+		get_schematics_textlist()
 	
 		meta:set_string("formspec", get_selector_formspec(pos))
 	end,
