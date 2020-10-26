@@ -82,6 +82,19 @@ local function get_blocks_from_schematic(schematic)
 	return blocks
 end
 
+-- replace specific 'old_block' blocks in a schematic with the given 'new_block' parameter
+local function set_blocks_from_schematic(schematic, old_block, new_block, quantity)
+	local steps = quantity
+	while quantity > 0 do
+		for k,v in pairs(schematic.data) do
+			if v.name == old_block then
+				v.name = new_block
+				steps = steps - 1
+			end
+		end
+	end
+end
+
 -- replaces all the blocks in a schematic with the given 'block' parameter
 local function replace_blocks_in_schematic(schematic, block)
 	for k,v in pairs(schematic.data) do
