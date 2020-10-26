@@ -1,3 +1,6 @@
+lazybuilder_current_schematic = minetest.get_modpath("lazybuilder") .. "/schematics/House_Simple.mts"
+
+
 -- Represents a singular piece of the whole blueprint
 minetest.register_node(minetest.get_current_modname()..":blueprint",{
 	description = "Blueprint block",
@@ -88,6 +91,31 @@ local function replace_blocks_in_schematic(schematic, block)
 	end
 end
 
+local function place_blueprint(block, pos)
+	
+	local offset_pos = minetest.serialize(pos)
+	offset_pos = minetest.deserialize(offset_pos)
+	offset_pos.x = offset_pos.x + 1
+	local path = lazybuilder_current_schematic
+	local schematic  = minetest.read_schematic(path, {})
+	local blocks = get_blocks_from_schematic(schematic)
+	local meta = minetest.get_meta(pos)
+	meta:set_string("blocks", minetest.serialize(blocks))
+
+	
+	-- preparing the inventory of the placer --
+	local inv = meta:get_inventory()
+	inv:set_lists({})
+	for k,v in pairs(blocks) do -- Create an inventory for each different item in blocks
+		inv:set_size(tostring(k), 1)
+	end
+	
+	replace_blocks_in_schematic(schematic, block)
+	minetest.place_schematic(offset_pos, schematic, "0",{} , true)
+	
+	meta:set_string("formspec", get_selector_formspec(pos))
+end
+
 -- Used to place down blueprints
 minetest.register_node(minetest.get_current_modname()..":blueprint_selector",{
 	description = "Blueprint selector",
@@ -95,29 +123,17 @@ minetest.register_node(minetest.get_current_modname()..":blueprint_selector",{
 	walkable = true,
 	groups = {choppy = 3, snappy = 1},
 	on_construct = function(pos)
-		local path = minetest.get_modpath("lazybuilder").."/schematics/House_Simple.mts"
-		local schematic  = minetest.read_schematic(path, {})
-		local blocks = get_blocks_from_schematic(schematic)
-		replace_blocks_in_schematic(schematic, "lazybuilder:blueprint")
-		minetest.place_schematic(pos, schematic, "0",{} , false)
-		
-
-		-- to allow access in the formspec we need to save the blocks information in the metadata
-		local meta = minetest.get_meta(pos)
-		meta:set_string("blocks", minetest.serialize(blocks)) 
-	
-		-- preparing the inventory of the placer --
-		local inv = meta:get_inventory()
-		for k,v in pairs(blocks) do -- Create an inventory for each different item in blocks
-			inv:set_size(tostring(k), 1)
-		end
-		
-		get_schematics_textlist()
-	
-		meta:set_string("formspec", get_selector_formspec(pos))
+		place_blueprint("lazybuilder:blueprint", pos)			
 	end,
 	on_receive_fields = function(pos, formname, fields, player)
-		
+		local event = minetest.explode_textlist_event(fields.schematics_list)
+		if event.type == "CHG" then
+			local name = get_schematics_textlist()[event.index]
+			minetest.chat_send_all(name)
+			place_blueprint("air", pos)
+			lazybuilder_current_schematic = minetest.get_modpath("lazybuilder") .. "/schematics/" .. name
+			place_blueprint("lazybuilder:blueprint", pos)
+		end
 	end
 })
 
