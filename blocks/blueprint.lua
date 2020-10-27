@@ -136,17 +136,13 @@ local function compare_tables_values(table1, table2)
 	local lenght1 = 0
 	local lenght2 = 0
 	
-	if not table1 then
-		return false
-	end
-	
 	for k, v in pairs(table1) do
-		table.insert(table1, v)
+		table.insert(values1, v)
 		lenght1 = lenght1 + 1
 	end
 	
 	for k, v in pairs(table2) do
-		table.insert(table1, v)
+		table.insert(values2, v)
 		lenght2 = lenght2 + 1
 	end
 	
@@ -154,8 +150,8 @@ local function compare_tables_values(table1, table2)
 		return false
 	end
 	
-	for i in lenght1 do
-		if values1[i] ~= values2[i] then
+	for i = 1, lenght1, 1 do
+		if values1[i] <= values2[i] then
 			return false
 		end
 	end
@@ -194,13 +190,11 @@ minetest.register_node(minetest.get_current_modname()..":blueprint_selector",{
 				contents[new_stack:get_name()] = new_stack:get_count()
 			end
 			
-			minetest.chat_send_all(dump(contents))
-			
---			if not compare_tables_values(recipe, contents) then
---				minetest.chat_send_all("Cannot build. Insuficient materials.")
---			else
---				minetest.chat_send_all("Blueprint is built")
---			end
+			if not compare_tables_values(contents, recipe) then
+				minetest.chat_send_all("Cannot build. Insufficient materials.")
+			else
+				minetest.chat_send_all("Blueprint is built")
+			end
 		end
 	end
 })
