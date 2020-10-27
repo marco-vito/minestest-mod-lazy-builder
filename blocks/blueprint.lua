@@ -181,21 +181,26 @@ minetest.register_node(minetest.get_current_modname()..":blueprint_selector",{
 			place_blueprint("air", pos)
 			lazybuilder_current_schematic = minetest.get_modpath("lazybuilder") .. "/schematics/" .. name
 			place_blueprint("lazybuilder:blueprint", pos)
-		end
+		end	
 		
 		if fields.build_button then
-			minetest.chat_send_all("Button pressed")
 			local meta = minetest.get_meta(pos)
 			local recipe = minetest.deserialize(meta:get_string("blocks"))
-			local contents = fields.list
+			local inv = meta:get_inventory()
+			local contents = {}
 			
-			minetest.chat_send_all(tostring(contents))
-			
-			if not compare_tables_values(recipe, contents) then
-				minetest.chat_send_all("Cannot build. Insuficient materials.")
-			else
-				minetest.chat_send_all("Blueprint is built")
+			for k,v in pairs(recipe) do
+				local new_stack = inv:get_stack(k, 1)
+				contents[new_stack:get_name()] = new_stack:get_count()
 			end
+			
+			minetest.chat_send_all(dump(contents))
+			
+--			if not compare_tables_values(recipe, contents) then
+--				minetest.chat_send_all("Cannot build. Insuficient materials.")
+--			else
+--				minetest.chat_send_all("Blueprint is built")
+--			end
 		end
 	end
 })
