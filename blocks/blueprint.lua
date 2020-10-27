@@ -14,6 +14,19 @@ minetest.register_node(minetest.get_current_modname()..":blueprint",{
 	end
 })
 
+local function list_to_string(list)
+	local new_string = ""
+	
+	for k,v in pairs(list) do
+		if k == 1 then
+			new_string = new_string .. v
+		else
+			new_string = new_string .. ", " .. v 
+		end
+	end
+	return new_string
+end
+
 -- reads the chematics folder and creates a textlist with all the available schematics
 local function get_schematics_textlist()
 
@@ -28,20 +41,6 @@ local function get_schematics_textlist()
         end
 	end
 	return schematics_textlist
-end
-
-
-local function list_to_string(list)
-	local new_string = ""
-	
-	for k,v in pairs(list) do
-		if k == 1 then
-			new_string = new_string .. v
-		else
-			new_string = new_string .. ", " .. v 
-		end
-	end
-	return new_string
 end
 
 -- builds the UI dynamically depending on the amount of different blocks in the schematic
@@ -61,6 +60,7 @@ local function get_selector_formspec(pos)
 		i = i + 1
 	end
 	table.insert(formspec, "textlist[3,11;6,0.75;schematics_list;" .. list_to_string(get_schematics_textlist()) .. "]")
+	table.insert(formspec, "button[8,2;4,2;build_button;Build Blueprint]")
 	return table.concat(formspec, "")
 end
 
@@ -129,6 +129,40 @@ local function place_blueprint(block, pos)
 	meta:set_string("formspec", get_selector_formspec(pos))
 end
 
+-- Compare tables values to check if they are the same or not
+local function compare_tables_values(table1, table2)
+	local values1 = {}
+	local values2 = {}
+	local lenght1 = 0
+	local lenght2 = 0
+	
+	if not table1 then
+		return false
+	end
+	
+	for k, v in pairs(table1) do
+		table.insert(table1, v)
+		lenght1 = lenght1 + 1
+	end
+	
+	for k, v in pairs(table2) do
+		table.insert(table1, v)
+		lenght2 = lenght2 + 1
+	end
+	
+	if lenght1 ~= lenght2 then
+		return false
+	end
+	
+	for i in lenght1 do
+		if values1[i] ~= values2[i] then
+			return false
+		end
+	end
+	
+	return true
+end
+
 -- Used to place down blueprints
 minetest.register_node(minetest.get_current_modname()..":blueprint_selector",{
 	description = "Blueprint selector",
@@ -139,6 +173,7 @@ minetest.register_node(minetest.get_current_modname()..":blueprint_selector",{
 		place_blueprint("lazybuilder:blueprint", pos)			
 	end,
 	on_receive_fields = function(pos, formname, fields, player)
+	
 		local event = minetest.explode_textlist_event(fields.schematics_list)
 		if event.type == "CHG" then
 			local name = get_schematics_textlist()[event.index]
@@ -147,8 +182,24 @@ minetest.register_node(minetest.get_current_modname()..":blueprint_selector",{
 			lazybuilder_current_schematic = minetest.get_modpath("lazybuilder") .. "/schematics/" .. name
 			place_blueprint("lazybuilder:blueprint", pos)
 		end
+		
+		if fields.build_button then
+			minetest.chat_send_all("Button pressed")
+			local meta = minetest.get_meta(pos)
+			local recipe = minetest.deserialize(meta:get_string("blocks"))
+			local contents = fields.list
+			
+			minetest.chat_send_all(tostring(contents))
+			
+			if not compare_tables_values(recipe, contents) then
+				minetest.chat_send_all("Cannot build. Insuficient materials.")
+			else
+				minetest.chat_send_all("Blueprint is built")
+			end
+		end
 	end
 })
+
 
 minetest.register_craft({
 	output = "lazybuilder:blueprint_selector",
