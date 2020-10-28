@@ -27,6 +27,47 @@ local function list_to_string(list)
 	return new_string
 end
 
+-- Makes a list with only the keys of a table as elements
+local function get_key_list_from_dictionary(dictionary)
+	local values = {}
+	
+	for k, v in pairs(dictionary) do
+		table.insert(values, v)
+	end
+	
+	return values
+end
+
+-- Compare tables values to check if they are the same or not
+local function compare_tables_values(table1, table2)
+	local values1 = {}
+	local values2 = {}
+	local lenght1 = 0
+	local lenght2 = 0
+	
+	for k, v in pairs(table1) do
+		table.insert(values1, v)
+		lenght1 = lenght1 + 1
+	end
+	
+	for k, v in pairs(table2) do
+		table.insert(values2, v)
+		lenght2 = lenght2 + 1
+	end
+	
+	if lenght1 ~= lenght2 then
+		return false
+	end
+	
+	for i = 1, lenght1, 1 do
+		if values1[i] <= values2[i] then
+			return false
+		end
+	end
+	
+	return true
+end
+
 -- reads the chematics folder and creates a textlist with all the available schematics
 local function get_schematics_textlist()
 
@@ -104,6 +145,7 @@ local function replace_blocks_in_schematic(schematic, block)
 	end
 end
 
+-- creates the blueprint of any given schematic
 local function place_blueprint(block, pos)
 	
 	local offset_pos = minetest.serialize(pos)
@@ -129,34 +171,22 @@ local function place_blueprint(block, pos)
 	meta:set_string("formspec", get_selector_formspec(pos))
 end
 
--- Compare tables values to check if they are the same or not
-local function compare_tables_values(table1, table2)
-	local values1 = {}
-	local values2 = {}
-	local lenght1 = 0
-	local lenght2 = 0
+-- transforms a placed blueprint into a contructed building
+local function build_from_blueprint(pos, recipe_blocks, contents_blocks)
+	local path = lazybuilder_current_schematic
+	local schematic  = minetest.read_schematic(path, {})
 	
-	for k, v in pairs(table1) do
-		table.insert(values1, v)
-		lenght1 = lenght1 + 1
-	end
-	
-	for k, v in pairs(table2) do
-		table.insert(values2, v)
-		lenght2 = lenght2 + 1
-	end
-	
-	if lenght1 ~= lenght2 then
-		return false
-	end
-	
-	for i = 1, lenght1, 1 do
-		if values1[i] <= values2[i] then
-			return false
+	minetest.chat_send_all(dump(schematics))
+					
+	for k,v in pairs(schematic.data) do
+		if not (v.name == 0 or v.name == "air" or v.name == 254) then
+			for i = 1, #recipe_blocks, 1 do
+				if v.name == recipe_blocks[i] then
+					v.name = contents_blocks[i]
+				end
+			end
 		end
 	end
-	
-	return true
 end
 
 -- Used to place down blueprints
@@ -193,6 +223,9 @@ minetest.register_node(minetest.get_current_modname()..":blueprint_selector",{
 			if not compare_tables_values(contents, recipe) then
 				minetest.chat_send_all("Cannot build. Insufficient materials.")
 			else
+				local recipe_blocks = get_key_list_from_dictionary(recipe)
+				local contents_blocks = get_key_list_from_dictionary(contents)
+				build_from_blueprint(pos, recipe_blocks, contents_blocks)
 				minetest.chat_send_all("Blueprint is built")
 			end
 		end
